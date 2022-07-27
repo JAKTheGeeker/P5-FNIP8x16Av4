@@ -51,6 +51,11 @@ function GetProperties()
     Type = "string", 
     Value = "0.0.0.0"
   })
+  table.insert(properties,{
+    Name = "Port", 
+    Type = "integer", 
+    Value = "7078"
+  })
   return props
 end
 
