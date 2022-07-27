@@ -138,7 +138,138 @@ end
 --Start event based logic
 if Controls then
 
-  Controls.SendButton.EventHandler = function()
-    print("Hello, World!")
+P5Relay = TcpSocket.New()
+PollTimer = Timer.New()
+
+infoBar = Controls.Status
+
+RelayOutOn   = 'FN,OUT,ON,'
+RelayOutOff  = 'FN,OUT,OFF,'
+startMessage     = 'FN,'
+
+----------- functions -----------------------
+
+
+function reconnect()
+  if Controls.IPAddress.String ~= '' then 
+    P5Relay:Connect(Controls.IPAddress.String, tonumber(Controls.Port.String))
+    print(P5Relay)
+    Controls.Connect.Boolean = true 
+    infoBar.String = 'Attempting reconnect'
+  else
+    P5Relay:Disconnect()
+    Controls.Connect.Boolean = false 
+    infoBar.String = 'Relay disconnected'
+  end
+end 
+
+
+----------- Relay Control ----------------------------
+
+
+for relayNo = 1 , #Controls.relayControl do 
+  Controls.relayControl[relayNo].EventHandler = function()
+    -- Check relay state
+    if Controls.relayControl[relayNo].Boolean == true then 
+      if Controls.momentary[relayNo].Value >= 1 then 
+        -- If momentary value is set then add to message
+       send(relayNo, 'MON, ', Controls.momentary[relayNo].Value)
+      else 
+        -- If not, send without momentary value
+        send(relayNo, 'ON, ')
+      end 
+    else 
+      send(relayNo, 'OFF, ')
+    end 
+  end 
+end 
+
+
+-- Send commands
+function send(number, state, momentaryValue)
+--Check if momentary value is enabled or not
+  if momentaryValue ~= nil then
+    --Add momentary value to package and send
+    message = (startMessage..state..tostring(number)..', '..tostring(momentaryValue)..'\r')
+    P5Relay:Write(message)
+  else 
+    -- Send command without momentary value
+    message = (startMessage..state..tostring(number)..'\r')
+    P5Relay:Write(message)
+  end 
+end 
+
+
+-- Check 1st run state of relays
+function checkRelayState()
+  P5Relay:Write('FN,SRE\r')
+end 
+
+----------- Socket Callbacks -------------------------
+
+
+P5Relay.Connected = function()
+  print('socket is connected')
+  infoBar.String = 'Device Connected'
+  -- Once connected, GET relay status from device
+  checkRelayState()
+end 
+
+-- Read data from device
+P5Relay.Data = function()
+for i = 1, #Controls.relay do
+-- Message processing
+    local message = P5Relay:ReadLine(TcpSocket.EOL.Custom, '\n\r>')
+
+    if message == nil then 
+    else 
+    -- Strip '>' from message
+    local strippedMsg = message:gsub('%>', '')
+    -- find sourcenumber in data
+    local sourceNumber = tonumber(string.sub(strippedMsg, -1))
+    if strippedMsg == tostring(RelayOutOn..sourceNumber) then 
+      -- Trigger Relay LED number
+      Controls.relay[sourceNumber].Boolean = true
+      -- Set relay control state
+      Controls.relayControl[sourceNumber].Boolean = true 
+    elseif strippedMsg == tostring(RelayOutOff..sourceNumber) then 
+      -- Trigger Relay LED number
+      Controls.relay[sourceNumber].Boolean = false
+      -- Set relay control state
+      Controls.relayControl[sourceNumber].Boolean = false 
+    end 
+    end
+    end
+end
+
+
+P5Relay.Error = function()
+  print('Error occurred', error)
+  P5Relay:Disconnect()
+  Controls.Connect.Boolean = false
+  infoBar.String = 'Device disconnected due to an unknown error.\n Attempting to reconnect.'
+end 
+
+
+------------- Eventhandlers -------------------------------
+
+
+Controls.Connect.EventHandler = function()
+  if Controls.Connect.Boolean == true and Controls.IPAddress.String ~= '' then 
+    P5Relay:Connect(Controls.IPAddress.String, tonumber(Controls.Port.String))
+    print(P5Relay)
+    infoBar.String = 'Trying to connect'
+  else
+    P5Relay:Disconnect()
+    Controls.Connect.Boolean = false 
+    infoBar.String = 'Relay disconnected'
+  end 
+end 
+
+
+P5Relay:Disconnect()
+Controls.Connect.Boolean = false
+infoBar.String = ''
+reconnect()
   end
 end
