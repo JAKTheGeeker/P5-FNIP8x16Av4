@@ -154,11 +154,11 @@ function reconnect()
   if Controls.IPAddress.String ~= '' then 
     P5Relay:Connect(Controls.IPAddress.String, tonumber(Controls.Port.String))
     print(P5Relay)
-    Controls.Connect.Boolean = true 
+    Controls.ConnectButton.Boolean = true 
     infoBar.String = 'Attempting reconnect'
   else
     P5Relay:Disconnect()
-    Controls.Connect.Boolean = false 
+    Controls.ConnectButton.Boolean = false 
     infoBar.String = 'Relay disconnected'
   end
 end 
@@ -167,13 +167,13 @@ end
 ----------- Relay Control ----------------------------
 
 
-for relayNo = 1 , #Controls.relayControl do 
+for relayNo = 1 , #Controls.RelayControlButtons do 
   Controls.relayControl[relayNo].EventHandler = function()
     -- Check relay state
-    if Controls.relayControl[relayNo].Boolean == true then 
-      if Controls.momentary[relayNo].Value >= 1 then 
+    if Controls.RelayControlButtons[relayNo].Boolean == true then 
+      if Controls.SetMomentaryTime[relayNo].Value >= 1 then 
         -- If momentary value is set then add to message
-       send(relayNo, 'MON, ', Controls.momentary[relayNo].Value)
+       send(relayNo, 'MON, ', Controls.SetMomentaryTime[relayNo].Value)
       else 
         -- If not, send without momentary value
         send(relayNo, 'ON, ')
