@@ -18,7 +18,7 @@ local relayCount = 8
 
 -- Define the color of the plugin object in the design
 function GetColor(props)
-  return { 0, 0, 0 }
+  return { 100, 255, 120 }
 end
 
 -- The name that will initially display when dragged into a design
@@ -45,6 +45,11 @@ function GetProperties()
     Type = "enum",
     Choices = {"None", "Tx/Rx", "Tx", "Rx", "Function Calls", "All"},
     Value = "None"
+  })
+  table.insert(properties,{
+    Name = "IP Address", 
+    Type = "string", 
+    Value = "0.0.0.0"
   })
   return props
 end
@@ -73,8 +78,7 @@ end
 -- Optional function to define wiring of components used within the plugin
 function GetWiring(props)
   local wiring = {}
-  --table.insert( wiring, { "Audio Output", "main_mixer Output 1" } )
-  --table.insert( wiring, {Control Input, })
+
   return wiring
 end
 
@@ -82,7 +86,6 @@ end
 function GetControls(props)
   local ctrls = {}
 
-  --table.insert(ctrls, {Name = "SendButton", ControlType = "Button", ButtonType = "Momentary", Count = 1, UserPin = true, PinStyle = "Input", Icon = "Power" })
   table.insert(ctrls, {Name = "ConnectButton", ControlType = "Button", ButtonType = "Toggle", Count = 1, UserPin = false })
   table.insert(ctrls, {Name = "RelayControlButtons", ControlType = "Button", ButtonType = "Toggle", Count = relayCount, UserPin = true, PinStyle = "Both"})
   table.insert(ctrls, {Name = "SetMomentaryTime", ControlType = "Knob", ControlUnit = "Integer", Min = 0, Max = 100, Count = relayCount, UserPin = false})
@@ -129,6 +132,7 @@ end
 
 --Start event based logic
 if Controls then
+
   Controls.SendButton.EventHandler = function()
     print("Hello, World!")
   end
