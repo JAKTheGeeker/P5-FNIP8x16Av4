@@ -1,0 +1,153 @@
+-- P5 Plugin creation
+-- by Jakup A. Knudsen - Kinovox Scandinavia ApS
+-- July 2022
+
+-- Information block for the plugin
+PluginInfo = {
+  Name = "JAK.The.Geeker~P5 FNIP 8x16Av4",
+  Version = "0.0.1",
+  id = "com.jak.kvx.FNIP8x16Av4",
+  BuildVersion = "0.0.0.1",
+  Id = "c7b90369-7fc5-4831-bd17-fd5eb0a481e0",
+  Author = "Jakup A. Knudsen",
+  Description = "A very basic plugin"  
+}
+
+--Define number of relays in device
+local relayCount = 8
+
+-- Define the color of the plugin object in the design
+function GetColor(props)
+  return { 0, 0, 0 }
+end
+
+-- The name that will initially display when dragged into a design
+function GetPrettyName(props)
+  return "FNIP 8x16A v4, version " .. PluginInfo.Version
+end
+
+-- Optional function used if plugin has multiple pages
+
+PageNames = { "Control", "Setup" }  --List the pages within the plugin
+function GetPages(props)
+  local pages = {}
+  for ix,name in ipairs(PageNames) do
+    table.insert(pages, {name = PageNames[ix]})
+  end
+  return pages
+end
+
+-- Define User configurable Properties of the plugin
+function GetProperties()
+  local props = {}
+  table.insert(props, {
+    Name = "Debug Print",
+    Type = "enum",
+    Choices = {"None", "Tx/Rx", "Tx", "Rx", "Function Calls", "All"},
+    Value = "None"
+  })
+  return props
+end
+
+-- Optional function to define pins on the plugin that are not connected to a Control
+function GetPins(props)
+  local pins = {}
+  table.insert(pins,{
+    Name = "Audio Output",
+    Direction = "output",
+  })
+  return pins
+end
+
+-- Optional function to update available properties when properties are altered by the user
+function RectifyProperties(props)
+  if props.plugin_show_debug.Value == false then 
+    props["Debug Print"].IsHidden = true 
+  end
+  return props
+end
+
+-- Optional function to define components used within the plugin
+function GetComponents(props)
+  local components = {}
+  for i = 1, relayCount do
+  table.insert(components, {
+    Name = "Relay "..tostring(i)
+  })
+end
+
+  --[[table.insert(components,{
+    Name = "main_mixer",
+    Type = "mixer",
+    Properties =   
+    {
+      ["n_inputs"] = 8,
+      ["n_outputs"] = 1,
+    }
+  })]]
+  return components
+end
+
+-- Optional function to define wiring of components used within the plugin
+function GetWiring(props)
+  local wiring = {}
+  --table.insert( wiring, { "Audio Output", "main_mixer Output 1" } )
+  --table.insert( wiring, {Control Input, })
+  return wiring
+end
+
+-- Defines the Controls used within the plugin
+function GetControls(props)
+  local ctrls = {}
+
+  --table.insert(ctrls, {Name = "SendButton", ControlType = "Button", ButtonType = "Momentary", Count = 1, UserPin = true, PinStyle = "Input", Icon = "Power" })
+  table.insert(ctrls, {Name = "ConnectButton", ControlType = "Button", ButtonType = "Toggle", Count = 1, UserPin = false })
+  table.insert(ctrls, {Name = "RelayControlButtons", ControlType = "Button", ButtonType = "Toggle", Count = relayCount, UserPin = true, PinStyle = "Both"})
+  table.insert(ctrls, {Name = "SetMomentaryTime", ControlType = "Knob", ControlUnit = "Integer", Min = 0, Max = 100, Count = relayCount, UserPin = false})
+  table.insert(ctrls, {Name = "IPAddress", ControlType = "Text", Count = 1, UserPin = false})
+  table.insert(ctrls, {Name = "Port", ControlType = "Text", Count = 1, UserPin = false})
+  table.insert(ctrls, {Name="Status",ControlType="Indicator",IndicatorType = Reflect and "StatusGP" or "Status",IsReadOnly=true,Count=1,})
+  return ctrls
+end
+
+--Layout of controls and graphics for the plugin UI to display
+function GetControlLayout(props)
+  local layout = {}
+  local graphics = {}
+  local CurrentPage = PageNames[props["page_index"].Value]
+
+  -- Control Page
+  if CurrentPage == "Control" then
+
+    table.insert(graphics,{Type = "GroupBox",Text = "Control",Fill = {200,200,200,0},StrokeWidth = 1,Position = {5,5},Size = {550,150},HTextAlign = "Left",FontSize = 12,Radius = 10})
+    table.insert(graphics,{Type = "Text",Text = "Activate Relay:",Position = {10,42},Size = {90,16},FontSize = 12,HTextAlign = "Right",})
+    table.insert(graphics,{Type = "Text",Text = "Momentary Value:",Position = {10,75},Size = {90,26},FontSize = 12,HTextAlign = "Right",WordWrap = true})
+
+  for i = 1, relayCount do
+    layout["RelayControlButtons "..i] = {PrettyName = "Toggle Relay",Style = "Button",Position = {65 + i * 45, 42},Size = {35,16},Color = {102,102,156},Margin = 0,Legend = tostring(i), FontSize = 10}
+    layout["SetMomentaryTime "..i] ={PrettyName = "Value",Style = "TextField",ShowTextBox = true,Position = {65 + i * 45, 78},Color = {110,198,241},Size = {35, 20},Legend = "0", FontSize = 12}
+  end
+
+  
+-- Setup Page
+  elseif CurrentPage == "Setup" then
+    --Connection Group Box
+  table.insert(graphics,{Type = "GroupBox",Text = "Connection",Fill = {200,200,200,0},StrokeWidth = 1,Position = {5,5},Size = {280,180},HTextAlign = "Left",FontSize = 12,Radius = 10})
+  table.insert(graphics,{Type = "Text",Text = "IP Address:",Position = {10,42},Size = {90,16},FontSize = 14,HTextAlign = "Right",})
+  table.insert(graphics,{Type = "Text",Text = "Port:",Position = {10,68},Size = {90,16},FontSize = 14,HTextAlign = "Right",})
+
+  layout["IPAddress"] = {PrettyName = "IP Address",Position = {105, 42}, Size = {150, 22}, Color = {255,255,255} }
+  layout["Port"] = {PrettyName = "Port",Position = {105, 68}, Size = {150, 22}, Color = {255,255,255},Legend = "7078" }
+  layout["ConnectButton"] = {PrettyName = "Connect to Device",Style = "Button",Position = {105,98},Size = {150,35},Color = {102,102,156},Legend = "Connect",FontSize = 12}
+  layout["Status"]={PrettyName="Device's Connection Status",Style="Textdisplay",FontSize=14,Color={255,255,255},IsReadOnly=true,Position={105,143},Size={150,28}}
+
+  end
+  return layout, graphics
+end
+
+--Start event based logic
+if Controls then
+  Controls.SendButton.EventHandler = function()
+    print("Hello, World!")
+  end
+end
