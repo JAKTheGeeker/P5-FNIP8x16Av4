@@ -52,10 +52,6 @@ end
 -- Optional function to define pins on the plugin that are not connected to a Control
 function GetPins(props)
   local pins = {}
-  table.insert(pins,{
-    Name = "Audio Output",
-    Direction = "output",
-  })
   return pins
 end
 
@@ -70,21 +66,7 @@ end
 -- Optional function to define components used within the plugin
 function GetComponents(props)
   local components = {}
-  for i = 1, relayCount do
-  table.insert(components, {
-    Name = "Relay "..tostring(i)
-  })
-end
 
-  --[[table.insert(components,{
-    Name = "main_mixer",
-    Type = "mixer",
-    Properties =   
-    {
-      ["n_inputs"] = 8,
-      ["n_outputs"] = 1,
-    }
-  })]]
   return components
 end
 
