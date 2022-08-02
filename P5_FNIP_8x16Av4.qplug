@@ -1,4 +1,4 @@
--- P5 Plugin creation
+-- P5 Plugin
 -- by Jakup A. Knudsen - Kinovox Scandinavia ApS
 -- July 2022
 
@@ -7,7 +7,7 @@ PluginInfo = {
   Name = "Kinovox~P5 FNIP 8x16Av4",
   Version = "1.0.0",
   id = "com.jak.kvx.FNIP8x16Av4",
-  BuildVersion = "0.0.0.1",
+  BuildVersion = "0.100.21.1",
   Id = "c7b90369-7fc5-4831-bd17-fd5eb0a481e0",
   Author = "Jakup A. Knudsen",
   Description = "A plugin for controlling P5 FNIP8x16Av4 Ethernet relays"  
@@ -30,12 +30,12 @@ local kvxLogo = "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU
 
 -- Define the color of the plugin object in the design
 function GetColor(props)
-  return { 100, 255, 120 }
+  return { 8, 167, 225 }
 end
 
 -- The name that will initially display when dragged into a design
 function GetPrettyName(props)
-  return "FNIP 8x16A v4, version " .. PluginInfo.Version
+  return "FNIP-8x16A, version " .. PluginInfo.Version
 end
 
 -- Optional function used if plugin has multiple pages
@@ -111,11 +111,11 @@ function GetControlLayout(props)
   -- Control Page
   if CurrentPage == "Control" then
 
-    table.insert(graphics,{Type = "GroupBox",Text = "Control",Fill = {200,200,200,0},StrokeWidth = 1,Position = {5,5},Size = {550,150},HTextAlign = "Left",FontSize = 12,Radius = 10,IsReadOnly = true})
+    table.insert(graphics,{Type = "GroupBox",Text = "Control",Fill = {200,200,200,0},StrokeWidth = 1,Position = {5,5},Size = {500,150},HTextAlign = "Left",FontSize = 12,Radius = 10,IsReadOnly = true})
     table.insert(graphics,{Type = "Text",Text = "Activate Relay:",Position = {10,42},Size = {90,16},FontSize = 12,HTextAlign = "Right",IsReadOnly = true})
     table.insert(graphics,{Type = "Text",Text = "Momentary Value:",Position = {10,75},Size = {90,26},FontSize = 12,HTextAlign = "Right",WordWrap = true,IsReadOnly = true})
-    table.insert(graphics,{Type = "Text", Text = "Developed by \rJakup A. Knudsen", Position = {170, 75},FontSize = 10,HTextAlign = "Left",IsReadOnly = true})
-    table.insert(graphics,{Type = "Svg",Image = kvxLogo,Position = {20,110},Size = {145,35},IsReadOnly = true})
+    table.insert(graphics,{Type = "Svg",Image = p5Logo,Position = {110,110},Size = {90,29}})
+    table.insert(graphics,{Type = "Text",Text = "FNIP-8x16A.v4",Position = {210,110},Size={150,29},HTextAlign = "Left",VTextAlign="Bottom",FontSize = 14})
 
   for i = 1, relayCount do
     layout["RelayControlButtons "..i] = {PrettyName = "Relay Control~Toggle Relay "..i,Style = "Button",Position = {65 + i * 45, 42},Size = {35,16},Color = BtnGrn,OffColor = BtnGrnOff, Margin = 0,Legend = tostring(i), FontSize = 10}
@@ -125,10 +125,12 @@ function GetControlLayout(props)
 -- Setup Page
   elseif CurrentPage == "Setup" then
     --Connection Group Box
-  table.insert(graphics,{Type = "GroupBox",Text = "Connection",Fill = {200,200,200,0},StrokeWidth = 1,Position = {5,5},Size = {280,180},HTextAlign = "Left",FontSize = 12,Radius = 10})
+  table.insert(graphics,{Type = "GroupBox",Text = "Connection",Fill = {200,200,200,0},StrokeWidth = 1,Position = {5,5},Size = {280,250},HTextAlign = "Left",FontSize = 12,Radius = 10})
   table.insert(graphics,{Type = "Text",Text = "IP Address:",Position = {10,42},Size = {90,16},FontSize = 14,HTextAlign = "Right",})
   table.insert(graphics,{Type = "Text",Text = "Port:",Position = {10,68},Size = {90,16},FontSize = 14,HTextAlign = "Right",})
-  table.insert(graphics,{Type = "Svg",Image = p5Logo,Position = {10,143},Size = {90,29}})
+  
+  table.insert(graphics,{Type = "Text", Text = "Developed by \rJakup A. Knudsen", Position = {105, 210},Size = {145,35},FontSize = 10,HTextAlign = "Center",IsReadOnly = true})
+  table.insert(graphics,{Type = "Svg",Image = kvxLogo,Position = {110,180},Size = {145,35},IsReadOnly = true})
 
   layout["IPAddress"] = {PrettyName = "IP Address",Position = {105, 42}, Size = {150, 22}, Color = {255,255,255} }
   layout["Port"] = {PrettyName = "Port",Position = {105, 68}, Size = {150, 22}, Color = {255,255,255},Value = "7078" }
@@ -196,12 +198,16 @@ if Controls then
     end
   end 
 
+
 function ButtonStateChange()
+  print("Button State Change")
   for i = 1, #Controls.RelayControlButtons do
     if isConnected == true then
-      Controls.RelayControlButtons.IsInvisible = false
+      Controls.RelayControlButtons[i].IsDisabled = false
+      Controls.SetMomentaryTime[i].IsDisabled = false
     else
-      Controls.RelayControlButtons.IsInvisible = true
+      Controls.RelayControlButtons[i].IsDisabled = true
+      Controls.SetMomentaryTime[i].IsDisabled = true
     end
   end
 end
@@ -264,9 +270,9 @@ end
 
   P5Relay.Connected = function()
     -- Once connected, GET relay status from device
+    isConnected = true
     checkRelayState()
     ButtonStateChange()
-    isConnected = true
     Controls.ConnectButton.Legend = "Disconnect"
     ReportStatus("OK", "Device Connected")
     IsAlive(Controls.IPAddress.String)
@@ -329,6 +335,8 @@ end
       Controls.ConnectButton.Boolean = false 
       Controls.ConnectButton.Legend = "Connect"
       ReportStatus("COMPROMISED","Relay disconnected")
+      isConnected = false
+      ButtonStateChange()
     end 
   end 
 
