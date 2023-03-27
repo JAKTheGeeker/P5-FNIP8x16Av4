@@ -5,9 +5,9 @@
 -- Information block for the plugin
 PluginInfo = {
   Name = "Kinovox~P5 FNIP 8x16Av4",
-  Version = "1.0.0",
+  Version = "2.0.0",
   id = "com.jak.kvx.FNIP8x16Av4",
-  BuildVersion = "0.100.21.1",
+  BuildVersion = "0.340.31.1",
   Id = "c7b90369-7fc5-4831-bd17-fd5eb0a481e0",
   Author = "Jakup A. Knudsen",
   Description = "A plugin for controlling P5 FNIP8x16Av4 Ethernet relays"  
@@ -93,12 +93,62 @@ end
 function GetControls(props)
   local ctrls = {}
 
-  table.insert(ctrls, {Name = "ConnectButton", ControlType = "Button", ButtonType = "Toggle", Count = 1, UserPin = false })
-  table.insert(ctrls, {Name = "RelayControlButtons", ControlType = "Button", ButtonType = "Toggle", Count = relayCount, UserPin = true, PinStyle = "Both"})
-  table.insert(ctrls, {Name = "SetMomentaryTime", ControlType = "Knob", ControlUnit = "Integer", Min = 0, Max = 100, Count = relayCount, UserPin = true, PinStyle = "Input"})
-  table.insert(ctrls, {Name = "IPAddress", ControlType = "Text", Count = 1, UserPin = false})
-  table.insert(ctrls, {Name = "Port", ControlType = "Knob",ControlUnit = "Integer", DefaultValue = 7078,Min = 0,Max = 65535,Count=1,UserPin = false})
-  table.insert(ctrls, {Name = "Status",ControlType="Indicator",IndicatorType = "StatusGP" or "Status",IsReadOnly=true,Count=1,})
+  table.insert(ctrls, {
+    Name = "ConnectButton", 
+    ControlType = "Button", 
+    ButtonType = "Toggle", 
+    Count = 1, 
+    UserPin = false })
+
+  table.insert(ctrls, {
+    Name = "RelayControlButtons", 
+    ControlType = "Button",
+    ButtonType = "Toggle", 
+    Count = relayCount, 
+    UserPin = true, 
+    PinStyle = "Both"})
+
+  table.insert(ctrls, {
+    Name = "ContactClosureIndicators", 
+    ControlType = "Indicator", 
+    IndicatorType = "Led", 
+    Count = relayCount, 
+    UserPin = true, 
+    PinStyle = "Output"})
+
+  table.insert(ctrls, {
+    Name = "SetMomentaryTime", 
+    ControlType = "Knob", 
+    ControlUnit = "Integer", 
+    Min = 0, 
+    Max = 100, 
+    Count = relayCount, 
+    UserPin = true, 
+    PinStyle = "Input"})
+
+  table.insert(ctrls, {
+    Name = "IPAddress", 
+    ControlType = "Text", 
+    Count = 1, 
+    UserPin = false})
+
+  table.insert(ctrls, {
+    Name = "Port", 
+    ControlType = "Knob",
+    ControlUnit = "Integer", 
+    DefaultValue = 7078,
+    Min = 0,
+    Max = 65535,
+    Count=1,
+    UserPin = false})
+
+  table.insert(ctrls, {
+    Name = "Status",
+    ControlType="Indicator",
+    IndicatorType = "StatusGP" or "Status",
+    IsReadOnly=true,
+    Count=1,})
+
   return ctrls
 end
 
@@ -111,31 +161,178 @@ function GetControlLayout(props)
   -- Control Page
   if CurrentPage == "Control" then
 
-    table.insert(graphics,{Type = "GroupBox",Text = "Control",Fill = {200,200,200,0},StrokeWidth = 1,Position = {5,5},Size = {500,150},HTextAlign = "Left",FontSize = 12,Radius = 10,IsReadOnly = true})
-    table.insert(graphics,{Type = "Text",Text = "Activate Relay:",Position = {10,42},Size = {90,16},FontSize = 12,HTextAlign = "Right",IsReadOnly = true})
-    table.insert(graphics,{Type = "Text",Text = "Momentary Value:",Position = {10,75},Size = {90,26},FontSize = 12,HTextAlign = "Right",WordWrap = true,IsReadOnly = true})
-    table.insert(graphics,{Type = "Svg",Image = p5Logo,Position = {110,110},Size = {90,29}})
-    table.insert(graphics,{Type = "Text",Text = "FNIP-8x16A.v4",Position = {210,110},Size={150,29},HTextAlign = "Left",VTextAlign="Bottom",FontSize = 14})
+    table.insert(graphics,{
+        Type = "GroupBox",
+        Text = "Control",
+        Fill = {200,200,200,0},
+        StrokeWidth = 1,
+        Position = {5,5},
+        Size = {500,200},
+        HTextAlign = "Left",
+        FontSize = 12,
+        Radius = 10,
+        IsReadOnly = true})
+
+    table.insert(graphics,{
+        Type = "Text",
+        Text = "Contact Closures:",
+        Position = {10,42},
+        Size = {90,26},
+        FontSize = 12,
+        HTextAlign = "Right",
+        IsReadOnly = true})
+
+    table.insert(graphics,{
+        Type = "Text",
+        Text = "Activate Relay:",
+        Position = {10,92},
+        Size = {90,16},
+        FontSize = 12,
+        HTextAlign = "Right",
+        IsReadOnly = true})
+
+    table.insert(graphics,{
+        Type = "Text",
+        Text = "Momentary Value:",
+        Position = {10,125},
+        Size = {90,26},
+        FontSize = 12,
+        HTextAlign = "Right",
+        WordWrap = true,
+        IsReadOnly = true})
+
+    table.insert(graphics,{
+        Type = "Svg",
+        Image = p5Logo,
+        Position = {110,160},
+        Size = {90,29}})
+
+    table.insert(graphics,{
+        Type = "Text",
+        Text = "FNIP-8x16A.v4",
+        Position = { 210, 110 },
+        Size = { 150, 79 },
+        HTextAlign = "Left",
+        VTextAlign="Bottom",
+        FontSize = 14 })
+
+
+        --Insert Controls
 
   for i = 1, relayCount do
-    layout["RelayControlButtons "..i] = {PrettyName = "Relay Control~Toggle Relay "..i,Style = "Button",Position = {65 + i * 45, 42},Size = {35,16},Color = BtnGrn,OffColor = BtnGrnOff, Margin = 0,Legend = tostring(i), FontSize = 10}
-    layout["SetMomentaryTime "..i] ={PrettyName = "Momentary Value~Relay "..i.." Value",Style = "TextField",ShowTextBox = true,Position = {65 + i * 45, 78},Color = {110,198,241},Size = {35, 20},Legend = "0", FontSize = 12}
+    layout["ContactClosureIndicators "..i] = 
+    {
+        PrettyName = "Contact Closure~Input "..i.." Status",
+        Position = {70 + i * 45, 45},
+        Size = { 20, 20 },
+        Color = { 129, 255, 13 },
+        OffColor = { 255, 13, 17 },
+        Margin = 3,
+        Radius = 0,
+        Style = "Led",
+        --UnlinkOffColor = false,
+        IsReadOnly = true
+    }
+
+    layout["RelayControlButtons "..i] = 
+    {
+        PrettyName = "Relay Control~Toggle Relay "..i,
+        Style = "Button",
+        Position = {65 + i * 45, 92},
+        Size = {35,16},
+        Color = BtnGrn,
+        OffColor = BtnGrnOff, 
+        Margin = 0,
+        Legend = tostring(i), 
+        FontSize = 10
+    }
+
+    layout["SetMomentaryTime "..i] ={
+        PrettyName = "Momentary Value~Relay "..i.." Value",
+        Style = "TextField",
+        ShowTextBox = true,
+        Position = {65 + i * 45, 128},
+        Color = {110,198,241},
+        Size = {35, 20},
+        Legend = "0", 
+        FontSize = 12}
   end
 
 -- Setup Page
   elseif CurrentPage == "Setup" then
     --Connection Group Box
-  table.insert(graphics,{Type = "GroupBox",Text = "Connection",Fill = {200,200,200,0},StrokeWidth = 1,Position = {5,5},Size = {280,250},HTextAlign = "Left",FontSize = 12,Radius = 10})
-  table.insert(graphics,{Type = "Text",Text = "IP Address:",Position = {10,42},Size = {90,16},FontSize = 14,HTextAlign = "Right",})
-  table.insert(graphics,{Type = "Text",Text = "Port:",Position = {10,68},Size = {90,16},FontSize = 14,HTextAlign = "Right",})
-  
-  table.insert(graphics,{Type = "Text", Text = "Developed by \rJakup A. Knudsen", Position = {105, 210},Size = {145,35},FontSize = 10,HTextAlign = "Center",IsReadOnly = true})
-  table.insert(graphics,{Type = "Svg",Image = kvxLogo,Position = {110,180},Size = {145,35},IsReadOnly = true})
+  table.insert(graphics,{
+    Type = "GroupBox",
+    Text = "Connection",
+    Fill = {200,200,200,0},
+    StrokeWidth = 1,
+    Position = {5,5},
+    Size = {280,250},
+    HTextAlign = "Left",
+    FontSize = 12,
+    Radius = 10})
 
-  layout["IPAddress"] = {PrettyName = "IP Address",Position = {105, 42}, Size = {150, 22}, Color = {255,255,255} }
-  layout["Port"] = {PrettyName = "Port",Position = {105, 68}, Size = {150, 22}, Color = {255,255,255},Value = "7078" }
-  layout["ConnectButton"] = {PrettyName = "Connect to Device",Style = "Button",Position = {105,98},Size = {150,35},Color = BtnGrn, OffColor=BtnGrnOff,Legend = "Connect",FontSize = 12}
-  layout["Status"]={PrettyName="Device's Connection Status",Style="Textdisplay",FontSize=10,Color={255,255,255},IsReadOnly=true,Position={105,143},Size={150,28}}
+  table.insert(graphics,{
+    Type = "Text",
+    Text = "IP Address:",
+    Position = {10,42},
+    Size = {90,16},
+    FontSize = 14,
+    HTextAlign = "Right",})
+
+  table.insert(graphics,{
+    Type = "Text",
+    Text = "Port:",
+    Position = {10,68},
+    Size = {90,16},
+    FontSize = 14,
+    HTextAlign = "Right",})
+  
+  table.insert(graphics,{
+    Type = "Text", 
+    Text = "Developed by \rJakup A. Knudsen", 
+    Position = {105, 210},Size = {145,35},
+    FontSize = 10,HTextAlign = "Center",
+    IsReadOnly = true})
+
+  table.insert(graphics,{
+    Type = "Svg",
+    Image = kvxLogo,
+    Position = {110,180},
+    Size = {145,35},
+    IsReadOnly = true})
+
+  layout["IPAddress"] = {
+    PrettyName = "IP Address",
+    Position = {105, 42}, 
+    Size = {150, 22}, 
+    Color = {255,255,255} }
+
+  layout["Port"] = {
+    PrettyName = "Port",
+    Position = {105, 68}, 
+    Size = {150, 22},
+    Color = {255,255,255},
+    Value = "7078" }
+
+  layout["ConnectButton"] = {
+    PrettyName = "Connect to Device",
+    Style = "Button",
+    Position = {105,98},
+    Size = {150,35},
+    Color = BtnGrn, 
+    OffColor=BtnGrnOff,
+    Legend = "Connect",
+    FontSize = 12}
+
+  layout["Status"]={
+    PrettyName="Device's Connection Status",
+    Style="Textdisplay",
+    FontSize=10,
+    Color={255,255,255},
+    IsReadOnly=true,
+    Position={105,143},
+    Size={150,28}}
 
   end
   return layout, graphics
@@ -150,9 +347,11 @@ if Controls then
   isConnected  = false
   statusBar    = Controls.Status
 
-  RelayOutOn   = 'FN,OUT,ON,'
-  RelayOutOff  = 'FN,OUT,OFF,'
-  startMessage = 'FN,'
+  CCInOn        = 'FN,IN,ON,'
+  CCInOff       = 'FN,IN,OFF,'
+  RelayOutOn    = 'FN,OUT,ON,'
+  RelayOutOff   = 'FN,OUT,OFF,'
+  startMessage  = 'FN,'
 
   status_state = {OK=0,COMPROMISED=1,FAULT=2,NOTPRESENT=3,MISSING=4,INITIALIZING=5}
 
@@ -263,7 +462,8 @@ end
 
   -- Check 1st run state of relays
   function checkRelayState()
-    P5Relay:Write('FN,SRE\r')
+    P5Relay:Write('FN,SRE\r') --Relay outputs
+    P5Relay:Write('FN,SRI\r') --Contact Closure Inputs
   end 
 
   ----------- Socket Callbacks -------------------------
@@ -298,6 +498,12 @@ end
         elseif strippedMsg == tostring(RelayOutOff..sourceNumber) then 
           -- Set relay control state
           Controls.RelayControlButtons[sourceNumber].Boolean = false 
+        elseif  strippedMsg == tostring(CCInOn..sourceNumber) then 
+          -- Set Contact Closure On
+          Controls.ContactClosureIndicators[sourceNumber].Boolean = true 
+        elseif strippedMsg == tostring(CCInOff..sourceNumber) then 
+          -- Set Contact Closure Off
+          Controls.ContactClosureIndicators[sourceNumber].Boolean = false 
         end 
       end
     end
