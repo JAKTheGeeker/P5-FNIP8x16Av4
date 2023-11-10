@@ -5,9 +5,9 @@
 -- Information block for the plugin
 PluginInfo = {
   Name = "Kinovox~P5 FNIP 8x16Av4",
-  Version = "2.0.1",
+  Version = "2.1.0",
   id = "com.jak.kvx.FNIP8x16Av4",
-  BuildVersion = "0.340.32.1",
+  BuildVersion = "0.340.35.1",
   Id = "c7b90369-7fc5-4831-bd17-fd5eb0a481e0",
   Author = "Jakup A. Knudsen",
   Description = "A plugin for controlling P5 FNIP8x16Av4 Ethernet relays"  
@@ -344,6 +344,10 @@ if Controls then
   P5Relay      = TcpSocket.New()
   PollTimer    = Timer.New()
 
+  --Timer for automatic reconnect
+  timer = Timer.New()
+  time = 30
+
   isConnected  = false
   statusBar    = Controls.Status
 
@@ -389,6 +393,7 @@ if Controls then
       P5Relay:Connect(Controls.IPAddress.String, tonumber(Controls.Port.String))
 
       Controls.ConnectButton.Boolean = true 
+      startTimer()
       ReportStatus("COMPROMISED", "Attempting to reconnect")
     else
       P5Relay:Disconnect()
@@ -476,6 +481,8 @@ end
     Controls.ConnectButton.Legend = "Disconnect"
     ReportStatus("OK", "Device Connected")
     IsAlive(Controls.IPAddress.String)
+    timer:Stop()
+    time = 30
   end 
 
 
@@ -546,6 +553,21 @@ end
     end 
   end 
 
+  timer.EventHandler = function()
+    if time > 0 then 
+      time = time - 1
+      ReportStatus("COMPROMISED",'Attempting re-connect in '..tostring(time)..' seconds')
+    else 
+      timer:Stop()
+      time = 30
+      reconnect()
+    end
+    --print(time)
+  end 
+  
+  function startTimer()
+    timer:Start(1)
+  end
 
   P5Relay:Disconnect()
   ButtonStateChange()
