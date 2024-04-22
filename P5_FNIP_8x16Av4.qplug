@@ -5,9 +5,9 @@
 -- Information block for the plugin
 PluginInfo = {
   Name = "Kinovox~P5 FNIP 8x16Av4",
-  Version = "2.2.2",
+  Version = "2.2.3",
   id = "com.jak.kvx.FNIP8x16Av4",
-  BuildVersion = "0.340.36.3",
+  BuildVersion = "0.340.36.4",
   Id = "c7b90369-7fc5-4831-bd17-fd5eb0a481e0",
   Author = "Jakup A. Knudsen",
   Description = "A plugin for controlling P5 FNIP8x16Av4 Ethernet relays"  
@@ -328,7 +328,7 @@ function GetControlLayout(props)
     FontSize = 12}
 
   layout["Status"]={
-    PrettyName="Device's Connection Status",
+    PrettyName="Device Status",
     Style="Textdisplay",
     FontSize=10,
     Color={255,255,255},
