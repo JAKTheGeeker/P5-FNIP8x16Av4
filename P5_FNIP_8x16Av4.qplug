@@ -5,9 +5,9 @@
 -- Information block for the plugin
 PluginInfo = {
   Name = "Kinovox~P5 FNIP 8x16Av4",
-  Version = "2.2.1",
+  Version = "2.2.2",
   id = "com.jak.kvx.FNIP8x16Av4",
-  BuildVersion = "0.340.36.2",
+  BuildVersion = "0.340.36.3",
   Id = "c7b90369-7fc5-4831-bd17-fd5eb0a481e0",
   Author = "Jakup A. Knudsen",
   Description = "A plugin for controlling P5 FNIP8x16Av4 Ethernet relays"  
@@ -148,7 +148,8 @@ function GetControls(props)
     IndicatorType = "StatusGP" or "Status",
     IsReadOnly=true,
     Count=1,
-    UserPin = "Output"})
+    UserPin = true,
+    PinStyle = "Output"})
 
   return ctrls
 end
